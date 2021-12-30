@@ -13,7 +13,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{3A2C8CB1-E
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotJoshJohnson.Pipelines.Tests", "test\DotJoshJohnson.Pipelines.Tests\DotJoshJohnson.Pipelines.Tests.csproj", "{CB813660-EC6D-4705-BE9F-DDAD248FFCB0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotJoshJohnson.Pipelines.MicrosoftDependencyInjection.Tests", "src\DotJoshJohnson.Pipelines.MicrosoftDependencyInjection.Tests\DotJoshJohnson.Pipelines.MicrosoftDependencyInjection.Tests.csproj", "{003C11E8-7D08-4E16-B0F7-AF989417ECFA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotJoshJohnson.Pipelines.MicrosoftDependencyInjection.Tests", "test\DotJoshJohnson.Pipelines.MicrosoftDependencyInjection.Tests\DotJoshJohnson.Pipelines.MicrosoftDependencyInjection.Tests.csproj", "{003C11E8-7D08-4E16-B0F7-AF989417ECFA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

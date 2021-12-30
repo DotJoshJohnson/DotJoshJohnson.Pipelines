@@ -22,7 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DotJoshJohnson.Pipelines.MicrosoftDependencyInjection\DotJoshJohnson.Pipelines.MicrosoftDependencyInjection.csproj" />
+    <ProjectReference Include="..\..\src\DotJoshJohnson.Pipelines.MicrosoftDependencyInjection\DotJoshJohnson.Pipelines.MicrosoftDependencyInjection.csproj" />
   </ItemGroup>
 
 </Project>
