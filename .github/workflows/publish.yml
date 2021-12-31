@@ -1,0 +1,32 @@
+name: Publish to NuGet
+
+on:
+  push:
+    branches:
+      - release/*
+  workflow_dispatch:
+  release:
+    types:
+      - released
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Extract Version Number
+        id: version
+        run: |
+          semver=$(echo ${{github.ref}} | rev | cut -d "/" -f 1 | rev)
+          if [[ "${{github.ref}}" == *"/release/"* ]]; then semver="${semver}-preview.${{github.run_number}}"; fi
+          echo ::set-output name=semver::$semver
+      
+      - name: Setup .NET Core SDK
+        uses: actions/setup-dotnet@v1.9.0
+        with:
+          dotnet-version: "6.0"
+
+      - run: dotnet pack ./src/DotJoshJohnson.Pipelines/DotJoshJohnson.Pipelines.csproj -c Release -o ./dist -p:PackageVersion=${{steps.version.outputs.semver}}
+      - run: dotnet pack ./src/DotJoshJohnson.Pipelines.MicrosoftDependencyInjection/DotJoshJohnson.Pipelines.MicrosoftDependencyInjection.csproj -c Release -o ./dist -p:PackageVersion=${{steps.version.outputs.semver}}
+      - run: dotnet nuget push ./dist/*.nupkg -s 'https://api.nuget.org/v3/index.json' -k '${{secrets.NUGET_API_KEY}}'
