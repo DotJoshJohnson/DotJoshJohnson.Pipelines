@@ -1,9 +1,23 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net6.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<Authors>JoshJohnson</Authors>
+		<Company>Josh Johnson</Company>
+		<Product>DotJoshJohnson.Pipelines</Product>
+		<Description>A simple utility library for building and invoking pipelines similar to the ASP.NET Core middleware pipeline.</Description>
+		<Copyright>Copyright 2021, Josh Johnson</Copyright>
+		<PackageIcon>logo.png</PackageIcon>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Include="..\..\res\images\logo.png">
+			<Pack>True</Pack>
+			<PackagePath></PackagePath>
+		</None>
+	</ItemGroup>
 
 </Project>
