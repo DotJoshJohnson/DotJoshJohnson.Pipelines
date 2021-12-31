@@ -84,6 +84,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 var services = new ServiceCollection();
 
+// DON'T FORGET THIS STEP
+services.AddTransient<MyCustomComponent>();
+
 services.AddPipeline<PipelineContext>(p =>
 {
     p.Use(next => async (context, cancellationToken) =>
@@ -112,6 +115,9 @@ using Microsoft.Extensions.DependencyInjection;
 // ... //
 
 var services = new ServiceCollection();
+
+// DON'T FORGET THIS STEP
+services.AddTransient<MyCustomComponent>();
 
 services.AddNamedPipeline<PipelineContext>("MyPipeline", p =>
 {
