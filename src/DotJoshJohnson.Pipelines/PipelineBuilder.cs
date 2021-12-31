@@ -59,11 +59,21 @@ public class PipelineBuilder<TContext>
     {
         return Use(next => new PipelineInvocationDelegate<TContext>((context, cancellationToken) =>
         {
-            var component = _pipelineComponentActivator.Activate<TComponent, TContext>();
+            TComponent? component = default;
+
+            try
+            {
+                component = _pipelineComponentActivator.Activate<TComponent, TContext>();
+            }
+
+            catch (Exception ex)
+            {
+                throw new PipelineComponentActivationException<TComponent>(ex);
+            }
 
             if (component is null)
             {
-                throw new PipelineComponentNotFoundException<TComponent>();
+                throw new PipelineComponentActivationException<TComponent>();
             }
 
             return component.Invoke(context, next, cancellationToken);
