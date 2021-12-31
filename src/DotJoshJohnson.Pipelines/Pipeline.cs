@@ -5,7 +5,7 @@ public class Pipeline<TContext> : IPipeline<TContext>
 {
     private readonly PipelineInvocationDelegate<TContext> _invocationDelegate;
 
-    internal Pipeline(PipelineInvocationDelegate<TContext> invocationDelegate, string? name = default)
+    internal Pipeline(PipelineInvocationDelegate<TContext> invocationDelegate)
     {
         _invocationDelegate = invocationDelegate;
     }
