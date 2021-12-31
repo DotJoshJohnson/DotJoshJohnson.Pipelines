@@ -54,7 +54,7 @@ public class PipelineBuilder<TContext>
     /// <summary>
     /// Adds the specified component to the pipeline.
     /// </summary>
-    public virtual PipelineBuilder<TContext> Use<TComponent>()
+    public PipelineBuilder<TContext> Use<TComponent>()
         where TComponent : class, IPipelineComponent<TContext>
     {
         return Use(next => new PipelineInvocationDelegate<TContext>((context, cancellationToken) =>
