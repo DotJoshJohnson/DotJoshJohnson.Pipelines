@@ -1,4 +1,6 @@
-﻿namespace DotJoshJohnson.Pipelines.Tests;
+﻿using DotJoshJohnson.Pipelines.Components;
+
+namespace DotJoshJohnson.Pipelines.Tests;
 
 public class CustomPipelineComponent : IPipelineComponent<PipelineContext>
 {

@@ -1,6 +1,7 @@
 ﻿namespace Microsoft.Extensions.DependencyInjection;
 
 using DotJoshJohnson.Pipelines;
+using DotJoshJohnson.Pipelines.Components;
 using DotJoshJohnson.Pipelines.MicrosoftDependencyInjection;
 
 using Microsoft.Extensions.DependencyInjection.Extensions;

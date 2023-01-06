@@ -1,5 +1,7 @@
 ﻿namespace DotJoshJohnson.Pipelines.Tests;
 
+using DotJoshJohnson.Pipelines.Components;
+
 using System;
 
 public class PipelineBuilderTests
@@ -9,7 +11,7 @@ public class PipelineBuilderTests
     {
         var builder = new PipelineBuilder<PipelineContext>();
 
-        builder.Use(next => (context, cancellationToken) =>
+        builder.Use((context, cancellationToken, next) =>
         {
             return Task.CompletedTask;
         });

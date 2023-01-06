@@ -1,4 +1,4 @@
-﻿namespace DotJoshJohnson.Pipelines;
+﻿namespace DotJoshJohnson.Pipelines.Components;
 
 /// <summary>
 /// Responsible for providing an instance of the specified pipeline component during pipeline invocation.

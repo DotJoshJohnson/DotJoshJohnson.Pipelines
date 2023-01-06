@@ -1,4 +1,7 @@
-﻿namespace DotJoshJohnson.Pipelines.Tests;
+﻿using DotJoshJohnson.Pipelines.Components;
+using DotJoshJohnson.Pipelines.Events;
+
+namespace DotJoshJohnson.Pipelines.Tests;
 
 public class PipelineTests
 {
@@ -8,20 +11,20 @@ public class PipelineTests
         var context = new PipelineContext();
 
         await new PipelineBuilder<PipelineContext>()
-            .Use(next => async (context, cancellationToken) =>
+            .Use(async (context, cancellationToken, next) =>
             {
                 context.Data["test"] = string.Empty;
                 context.Data["test"] += "d1";
 
                 await next(context, cancellationToken);
             })
-            .Use(next => async (context, cancellationToken) =>
+            .Use(async (context, cancellationToken, next) =>
             {
                 context.Data["test"] += "d2";
 
                 await next(context, cancellationToken);
             })
-            .Use(next => (context, cancellationToken) =>
+            .Use((context, cancellationToken, next) =>
             {
                 context.Data["test"] += "d3";
 
@@ -53,20 +56,20 @@ public class PipelineTests
 
         await new PipelineBuilder<PipelineContext>()
             .Use<Component1>()
-            .Use(next => async (context, cancellationToken) =>
+            .Use(async (context, cancellationToken, next) =>
             {
                 context.Data["test"] += "d1";
 
                 await next(context, cancellationToken);
             })
-            .Use(next => async (context, cancellationToken) =>
+            .Use(async (context, cancellationToken, next) =>
             {
                 context.Data["test"] += "d2";
 
                 await next(context, cancellationToken);
             })
             .Use<Component2>()
-            .Use(next => async (context, cancellationToken) =>
+            .Use(async (context, cancellationToken, next) =>
             {
                 context.Data["test"] += "d3";
 
@@ -88,7 +91,7 @@ public class PipelineTests
     public async Task Invoke_ThrowsExceptionFromInvokedDelegate()
     {
         await Assert.ThrowsAsync<BarrierPostPhaseException>(() => new PipelineBuilder<PipelineContext>()
-            .Use(next => (context, cancellationToken) => throw new BarrierPostPhaseException())
+            .Use((context, cancellationToken, next) => throw new BarrierPostPhaseException())
             .BuildAndInvoke(new()));
     }
 
@@ -98,6 +101,122 @@ public class PipelineTests
         await Assert.ThrowsAsync<BarrierPostPhaseException>(() => new PipelineBuilder<PipelineContext>()
             .Use<ThrowingComponent>()
             .BuildAndInvoke(new()));
+    }
+
+    [Fact]
+    public async Task Invoke_RaisesBeforeComponentInvokedEvents()
+    {
+        var pipelineContext = new PipelineContext();
+
+        await new PipelineBuilder<PipelineContext>()
+            .Use((context, cancellationToken, next) =>
+            {
+                return Task.CompletedTask;
+            })
+            .AddEventHandler((context, cancellationToken) =>
+            {
+                context.PipelineContext.Data["event-type"] = context.EventType;
+
+                return Task.CompletedTask;
+            }, PipelineEventType.BeforeComponentInvoked)
+            .BuildAndInvoke(pipelineContext);
+
+        Assert.Equal(PipelineEventType.BeforeComponentInvoked, pipelineContext.Data["event-type"]);
+    }
+
+    [Fact]
+    public async Task Invoke_RaisesAfterComponentSucceededEvents()
+    {
+        var pipelineContext = new PipelineContext();
+
+        await new PipelineBuilder<PipelineContext>()
+            .Use((context, cancellationToken, next) =>
+            {
+                return Task.CompletedTask;
+            })
+            .AddEventHandler((context, cancellationToken) =>
+            {
+                context.PipelineContext.Data["event-type"] = context.EventType;
+
+                return Task.CompletedTask;
+            }, PipelineEventType.AfterComponentSucceeded)
+            .BuildAndInvoke(pipelineContext);
+
+        Assert.Equal(PipelineEventType.AfterComponentSucceeded, pipelineContext.Data["event-type"]);
+    }
+
+    [Fact]
+    public async Task Invoke_RaisesAfterComponentFailedEvents()
+    {
+        var pipelineContext = new PipelineContext();
+
+        try
+        {
+            await new PipelineBuilder<PipelineContext>()
+                .Use((context, cancellationToken, next) =>
+                {
+                    throw new System.Exception();
+                })
+                .AddEventHandler((context, cancellationToken) =>
+                {
+                    context.PipelineContext.Data["event-type"] = context.EventType;
+
+                    return Task.CompletedTask;
+                }, PipelineEventType.AfterComponentFailed)
+                .BuildAndInvoke(pipelineContext);
+        }
+
+        catch { }
+        
+
+        Assert.Equal(PipelineEventType.AfterComponentFailed, pipelineContext.Data["event-type"]);
+    }
+
+    [Fact]
+    public async Task Invoke_RaisesAfterComponentInvokedEvents()
+    {
+        var pipelineContext = new PipelineContext();
+
+        await new PipelineBuilder<PipelineContext>()
+            .Use((context, cancellationToken, next) =>
+            {
+                return Task.CompletedTask;
+            })
+            .AddEventHandler((context, cancellationToken) =>
+            {
+                context.PipelineContext.Data["event-type"] = context.EventType;
+
+                return Task.CompletedTask;
+            }, PipelineEventType.AfterComponentInvoked)
+            .BuildAndInvoke(pipelineContext);
+
+        Assert.Equal(PipelineEventType.AfterComponentInvoked, pipelineContext.Data["event-type"]);
+    }
+
+    [Fact]
+    public async Task Invoke_RaisesAllEvents()
+    {
+        var pipelineContext = new PipelineContext();
+
+        await new PipelineBuilder<PipelineContext>()
+            .Use((context, cancellationToken, next) =>
+            {
+                return Task.CompletedTask;
+            })
+            .AddEventHandler((context, cancellationToken) =>
+            {
+                if (!context.PipelineContext.Data.ContainsKey("event-types"))
+                {
+                    context.PipelineContext.Data["event-types"] = string.Empty;
+                }
+
+                context.PipelineContext.Data["event-types"] = $"{context.PipelineContext.Data["event-types"]}|{context.EventType}";
+
+                return Task.CompletedTask;
+            })
+            .BuildAndInvoke(pipelineContext);
+
+        Assert.Equal("|BeforeComponentInvoked|AfterComponentSucceeded|AfterComponentInvoked", pipelineContext.Data["event-types"]);
     }
 
     class Component1 : IPipelineComponent<PipelineContext>
