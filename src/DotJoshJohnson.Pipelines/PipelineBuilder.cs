@@ -170,6 +170,25 @@ public class PipelineBuilder<TContext>
         return this;
     }
 
+    /// <summary>
+    /// Adds the provided pipeline event handler to the pipeline.
+    /// An event type can be provided to ensure the handler is only invoked for that event type.
+    /// </summary>
+    /// <param name="handleEvent"></param>
+    /// <param name="eventType"></param>
+    /// <returns></returns>
+    public PipelineBuilder<TContext> AddEventHandler(SimplePipelineEventHandlerDelegate<TContext> handleEvent, PipelineEventType? eventType = null)
+    {
+        _eventHandlers.Add((eventType, handler: new PipelineEventHandlerDelegate<TContext>((context, cancellationToken) =>
+        {
+            handleEvent(context);
+
+            return Task.CompletedTask;
+        })));
+
+        return this;
+    }
+
     private async Task _InvokeEventHandlers(PipelineEventContext<TContext> eventContext, CancellationToken cancellationToken)
     {
         var handlers = _eventHandlers.Where(h => h.eventType is null || h.eventType == eventContext.EventType).Select(h => h.handler).ToArray();
