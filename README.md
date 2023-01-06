@@ -13,13 +13,13 @@ using DotJoshJohnson.Pipelines;
 // ... //
   
 var pipeline = new PipelineBuilder<PipelineContext>()
-    .Use(next => async (context, cancellationToken) =>
+    .Use(async (context, cancellationToken, next) =>
     {
         // TODO: do work
           
         await next(context, cancellationToken);
     })
-    .Use(next => async (context, cancellationToken) =>
+    .Use(async (context, cancellationToken, next) =>
     {
         // TODO: do more work
           
@@ -42,6 +42,7 @@ Instead of adding delegates directly to your pipeline, you can add components, w
 
 ```csharp
 using DotJoshJohnson.Pipelines;
+using DotJoshJohnson.Pipelines.Components;
 
 // ... //
 
@@ -89,7 +90,7 @@ services.AddTransient<MyCustomComponent>();
 
 services.AddPipeline<PipelineContext>(p =>
 {
-    p.Use(next => async (context, cancellationToken) =>
+    p.Use(async (context, cancellationToken, next) =>
     {
         // TODO: do work!
         
@@ -121,7 +122,7 @@ services.AddTransient<MyCustomComponent>();
 
 services.AddNamedPipeline<PipelineContext>("MyPipeline", p =>
 {
-    p.Use(next => async (context, cancellationToken) =>
+    p.Use(async (context, cancellationToken, next) =>
     {
         // TODO: do work!
         
@@ -136,4 +137,11 @@ var serviceProvider = services.BuildServiceProvider();
 var pipeline = serviceProvider.GetRequiredService<INamedPipeline>().Get<PipelineContext>("MyPipeline");
 
 await pipeline.Invoke(new());
+```
+
+**Using AddEventHandler**
+
+The `AddEventHandler` method can be used to add code that runs at specific points in the pipeline invocation chain. Specifically, you can run code before a comopnent is invoked, after a component succeeds, fails, or after component invocation (regardless of result). This allows you to add repetitive tasks such as logging in one place instead of duplicating the logic across multiple components.
+
+```csharp
 ```
