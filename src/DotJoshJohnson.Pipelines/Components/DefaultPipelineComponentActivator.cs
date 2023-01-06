@@ -1,4 +1,4 @@
-﻿namespace DotJoshJohnson.Pipelines;
+﻿namespace DotJoshJohnson.Pipelines.Components;
 
 /// <summary>
 /// The default <see cref="IPipelineComponentActivator"/> implementation used in <see cref="PipelineBuilder{TContext}"/> if a specific implementation is not provided.

@@ -1,5 +1,7 @@
 ﻿namespace DotJoshJohnson.Pipelines.MicrosoftDependencyInjection;
 
+using DotJoshJohnson.Pipelines.Components;
+
 using Microsoft.Extensions.DependencyInjection;
 
 public class MSDIPipelineComponentActivator : IPipelineComponentActivator

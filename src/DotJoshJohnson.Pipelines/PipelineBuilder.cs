@@ -1,5 +1,7 @@
 ﻿namespace DotJoshJohnson.Pipelines;
 
+using DotJoshJohnson.Pipelines.Components;
+using DotJoshJohnson.Pipelines.Events;
 using DotJoshJohnson.Pipelines.Exceptions;
 
 /// <summary>
@@ -8,10 +10,9 @@ using DotJoshJohnson.Pipelines.Exceptions;
 public class PipelineBuilder<TContext>
 {
     private readonly List<PipelineConfigurationDelegate<TContext>> _configurationDelegates = new();
+    private readonly List<(PipelineEventType? eventType, PipelineEventHandlerDelegate<TContext> handler)> _eventHandlers = new();
 
     private IPipelineComponentActivator _pipelineComponentActivator = DefaultPipelineComponentActivator.Instance;
-
-    public IReadOnlyList<PipelineConfigurationDelegate<TContext>> ConfigurationDelegates => _configurationDelegates.AsReadOnly();
 
     /// <summary>
     /// Compiles and returns a new pipeline ready for invocation.
@@ -44,11 +45,47 @@ public class PipelineBuilder<TContext>
     /// <summary>
     /// Adds the provided delegate to the pipeline.
     /// </summary>
-    public PipelineBuilder<TContext> Use(PipelineConfigurationDelegate<TContext> configureHandler)
+    internal PipelineBuilder<TContext> Use(PipelineConfigurationDelegate<TContext> configureHandler)
     {
         _configurationDelegates.Add(configureHandler);
 
         return this;
+    }
+
+    /// <summary>
+    /// Adds the provided delegate to the pipeline.
+    /// </summary>
+    public PipelineBuilder<TContext> Use(Func<TContext, CancellationToken, PipelineInvocationDelegate<TContext>, Task> handler)
+    {
+        return Use(next => new PipelineInvocationDelegate<TContext>(async (context, cancellationToken) =>
+        {
+            var eventContext = new PipelineEventContext<TContext>(PipelineEventType.BeforeComponentInvoked)
+            {
+                ComponentType = handler.GetType(),
+                PipelineContext = context
+            };
+
+            await _InvokeEventHandlers(eventContext, cancellationToken);
+
+            try
+            {
+                await handler(context, cancellationToken, next);
+
+                await _InvokeEventHandlers(eventContext.WithEventType(PipelineEventType.AfterComponentSucceeded), cancellationToken);
+            }
+
+            catch (Exception ex)
+            {
+                await _InvokeEventHandlers(eventContext.WithEventType(PipelineEventType.AfterComponentFailed), cancellationToken);
+
+                throw;
+            }
+
+            finally
+            {
+                await _InvokeEventHandlers(eventContext.WithEventType(PipelineEventType.AfterComponentInvoked), cancellationToken);
+            }
+        }));
     }
 
     /// <summary>
@@ -57,7 +94,7 @@ public class PipelineBuilder<TContext>
     public PipelineBuilder<TContext> Use<TComponent>()
         where TComponent : class, IPipelineComponent<TContext>
     {
-        return Use(next => new PipelineInvocationDelegate<TContext>((context, cancellationToken) =>
+        return Use(next => new PipelineInvocationDelegate<TContext>(async (context, cancellationToken) =>
         {
             TComponent? component = default;
 
@@ -76,7 +113,33 @@ public class PipelineBuilder<TContext>
                 throw new PipelineComponentActivationException<TComponent>();
             }
 
-            return component.Invoke(context, next, cancellationToken);
+            var eventContext = new PipelineEventContext<TContext>(PipelineEventType.BeforeComponentInvoked)
+            {
+                ComponentInstance = component,
+                ComponentType = component.GetType(),
+                PipelineContext = context
+            };
+
+            await _InvokeEventHandlers(eventContext, cancellationToken);
+
+            try
+            {
+                await component.Invoke(context, next, cancellationToken);
+
+                await _InvokeEventHandlers(eventContext.WithEventType(PipelineEventType.AfterComponentSucceeded), cancellationToken);
+            }
+
+            catch (Exception ex)
+            {
+                await _InvokeEventHandlers(eventContext.WithEventType(PipelineEventType.AfterComponentFailed), cancellationToken);
+
+                throw;
+            }
+
+            finally
+            {
+                await _InvokeEventHandlers(eventContext.WithEventType(PipelineEventType.AfterComponentInvoked), cancellationToken);
+            }
         }));
     }
 
@@ -94,5 +157,45 @@ public class PipelineBuilder<TContext>
         _pipelineComponentActivator = pipelineComponentActivator;
 
         return this;
+    }
+
+    /// <summary>
+    /// Adds the provided pipeline event handler to the pipeline.
+    /// An event type can be provided to ensure the handler is only invoked for that event type.
+    /// </summary>
+    public PipelineBuilder<TContext> AddEventHandler(PipelineEventHandlerDelegate<TContext> handleEvent, PipelineEventType? eventType = null)
+    {
+        _eventHandlers.Add((eventType, handleEvent));
+
+        return this;
+    }
+
+    /// <summary>
+    /// Adds the provided pipeline event handler to the pipeline.
+    /// An event type can be provided to ensure the handler is only invoked for that event type.
+    /// </summary>
+    /// <param name="handleEvent"></param>
+    /// <param name="eventType"></param>
+    /// <returns></returns>
+    public PipelineBuilder<TContext> AddEventHandler(SimplePipelineEventHandlerDelegate<TContext> handleEvent, PipelineEventType? eventType = null)
+    {
+        _eventHandlers.Add((eventType, handler: new PipelineEventHandlerDelegate<TContext>((context, cancellationToken) =>
+        {
+            handleEvent(context);
+
+            return Task.CompletedTask;
+        })));
+
+        return this;
+    }
+
+    private async Task _InvokeEventHandlers(PipelineEventContext<TContext> eventContext, CancellationToken cancellationToken)
+    {
+        var handlers = _eventHandlers.Where(h => h.eventType is null || h.eventType == eventContext.EventType).Select(h => h.handler).ToArray();
+
+        foreach (var handler in handlers)
+        {
+            await handler(eventContext, cancellationToken);
+        }
     }
 }

@@ -1,4 +1,4 @@
-﻿namespace DotJoshJohnson.Pipelines;
+﻿namespace DotJoshJohnson.Pipelines.Components;
 
 /// <summary>
 /// A member of the pipeline that can do work and optionally call the next component in the pipeline or short-circuit the pipeline.

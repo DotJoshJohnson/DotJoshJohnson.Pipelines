@@ -8,7 +8,7 @@ public class IServiceCollectionExtensionsTests
         var serviceProvider = new ServiceCollection()
             .AddPipeline<PipelineContext>(p =>
             {
-                p.Use(next => (context, cancellationToken) => Task.CompletedTask);
+                p.Use((context, cancellationToken, next) => Task.CompletedTask);
             })
             .BuildServiceProvider();
 
@@ -26,11 +26,11 @@ public class IServiceCollectionExtensionsTests
         var serviceProvider = new ServiceCollection()
             .AddNamedPipeline<PipelineContext>("test1", p =>
             {
-                p.Use(next => (context, cancellationToken) => Task.CompletedTask);
+                p.Use((context, cancellationToken, next) => Task.CompletedTask);
             })
             .AddNamedPipeline<PipelineContext>("test2", p =>
             {
-                p.Use(next => (context, cancellationToken) => Task.CompletedTask);
+                p.Use((context, cancellationToken, next) => Task.CompletedTask);
             })
             .BuildServiceProvider();
 
